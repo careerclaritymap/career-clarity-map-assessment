@@ -471,6 +471,8 @@ export default function App() {
                     );
                   })}
                 </div>
+                      </CardContent>
+      </Card>
 
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
                   <Button
@@ -494,7 +496,7 @@ export default function App() {
                     >
                       Complete payment
                     </Button>
-                  </CardContent>
+                  :473
                 </Card>
               )}
                           </div>
