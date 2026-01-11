@@ -449,7 +449,25 @@ export default function App() {
 
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
                   <Button
-                    onClick={() => setSubmitted(true)}
+                    onClick={async () => {
+          setIsCheckingPayment(true);
+          try {
+            const res = await fetch(`/api/verify-payment?email=${encodeURIComponent(email)}`);
+            const data = await res.json();
+            if (data.paid) {
+              setShowPaywall(false);
+              setSubmitted(true);
+            } else {
+              setShowPaywall(true);
+            }
+          } catch (error) {
+            console.error('Payment verification failed:', error);
+            setShowPaywall(true);
+          } finally {
+            setIsCheckingPayment(false);
+          }
+        }}
+
                     disabled={!canSubmit}
                     className={"rounded-2xl " + (canSubmit ? "bg-green-600 hover:bg-green-700 text-white" : "")}
                   >
