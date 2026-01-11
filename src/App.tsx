@@ -258,6 +258,8 @@ export default function App() {
     }, {} as Record<string, number | null>)
   );
   const [submitted, setSubmitted] = useState(false);
+    const [isCheckingPayment, setIsCheckingPayment] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   const resultsRef = useRef<HTMLDivElement | null>(null);
   const top1Ref = useRef<HTMLDivElement | null>(null);
@@ -331,6 +333,31 @@ export default function App() {
     );
     setSubmitted(false);
     // keep name
+  };
+
+    const handleCheckPayment = async () => {
+    setIsCheckingPayment(true);
+    setShowPaywall(false);
+
+    try {
+      const response = await fetch(`/api/verify-payment?email=${encodeURIComponent(email)}`);
+      const data = await response.json();
+
+      if (data.paid) {
+        // Payment verified - show results
+        setSubmitted(true);
+        setShowPaywall(false);
+      } else {
+        // Payment not found - show paywall
+        setShowPaywall(true);
+      }
+    } catch (error) {
+      console.error('Error verifying payment:', error);
+      // On error, show paywall to be safe
+      setShowPaywall(true);
+    } finally {
+      setIsCheckingPayment(false);
+    }
   };
 
   const reportFilename = useMemo(() => {
@@ -447,177 +474,26 @@ export default function App() {
 
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
                   <Button
-                    onClick={() => setSubmitted(true)}
-                    disabled={!canSubmit}
-                    className={"rounded-2xl " + (canSubmit ? "bg-green-600 hover:bg-green-700 text-white" : "")}
-                  >
-                    <span>See my results</span>
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-
-                {!canSubmit && <p className="text-sm text-muted-foreground">Please answer all questions to view your results.</p>}
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-6" ref={resultsRef}>
-            <Card className="rounded-2xl shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h2 className="text-2xl font-semibold">Your results</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Prepared for <span className="font-medium">{name?.trim() || "Alex"}</span> • {today}
+                onClick={handleCheckPayment}
+                disabled={!canSubmit || isCheckingPayment}
+                className={"rounded-2xl " + (canSubmit ? "bg-green-600 hover:bg-green-700 text-white" : "")}
+              >
+                <span>{isCheckingPayment ? "Checking payment..." : "See my results"}</span>
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+                                {showPaywall && (
+                <Card className="mt-4 rounded-2xl border-2 border-amber-200 bg-amber-50">
+                  <CardContent className="p-6 text-center">
+                    <h3 className="text-xl font-semibold text-amber-900">Payment required</h3>
+                    <p className="mt-3 text-sm text-amber-800">
+                      To view your results and download your PDF report, please complete payment.
                     </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="secondary" className="rounded-2xl" onClick={onReset}>
-                      <RotateCcw className="mr-2 h-4 w-4" /> Retake
-                    </Button>
                     <Button
-                      className="rounded-2xl"
-                      onClick={async () => {
-                        const el = document.getElementById("pdf-root");
-                        if (!el) return;
-                        await exportPdfFromElement(el, reportFilename);
-                      }}
+                      className="mt-4 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white"
+                      onClick={() => window.open('https://buy.stripe.com/6oU5kbdZy3Jkce61b50Jq00', '_blank')}
                     >
-                      <Download className="mr-2 h-4 w-4" /> Download PDF
+                      Complete payment
                     </Button>
-                  </div>
-                </div>
-
-                <Separator className="my-4" />
-
-                <div className="space-y-3">
-                  {scores.map((s, i) => (
-                    <div key={s.key} className="flex items-center gap-3">
-                      <div className="w-7 text-sm font-medium text-muted-foreground">#{i + 1}</div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium">{s.label}</span>
-                          <span className="text-muted-foreground">{s.pct}/100</span>
-                        </div>
-                        <div className="mt-1 h-2 w-full rounded-full bg-muted">
-                          <div className="h-2 rounded-full bg-foreground" style={{ width: `${s.pct}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <p className="mt-4 text-sm text-muted-foreground">
-                  Below, you’ll see interpretations for your <span className="font-medium">Top 2</span> needs first.
-                  You can export everything as a PDF.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* PDF ROOT: Everything inside is exported */}
-            <div id="pdf-root" className="space-y-6">
-              <Card className="rounded-2xl shadow-sm">
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-semibold">Career Motivation Map — Interpretation</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    This report is designed for reflection and decision support. It is not a job-matching or personality test.
-                  </p>
-                </CardContent>
-              </Card>
-
-              {topNeeds.top1 && (
-                <div ref={top1Ref}>
-                  <InterpretationBlock need={topNeeds.top1} rankLabel="Top Driver" />
-                </div>
+                  </CardContent>
+                </Card>
               )}
-
-              {topNeeds.top2 && (
-                <div ref={top2Ref}>
-                  <InterpretationBlock need={topNeeds.top2} rankLabel="Second Driver" />
-                </div>
-              )}
-
-              <Card className="rounded-2xl shadow-sm">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold">Decision support questions</h3>
-                  <p className="mt-2 text-sm">Use these before your next career decision:</p>
-                  <ul className="mt-3 list-disc space-y-2 pl-5 text-sm">
-                    <li>Which of my top motivations will this role actively support?</li>
-                    <li>Which motivation might be ignored or suppressed?</li>
-                    <li>How will this role feel emotionally after 6 months?</li>
-                    <li>What does “success” feel like here, not just look like?</li>
-                    <li>If nothing changed, would I still choose this role?</li>
-                    <li>What would make this role feel draining, even if it looks good externally?</li>
-                    <li>What would I need in place to feel fulfilled long-term?</li>
-                  </ul>
-
-                  <Separator className="my-4" />
-
-                  <p className="text-xs text-muted-foreground">
-                    Important note: This report is designed for personal reflection and decision support only. It does not replace
-                    professional career, medical, or psychological advice.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
-
-        <div className="mt-10 text-xs text-muted-foreground">
-          <p>
-            Tip: When you provide your final interpretation texts, replace the <code>INTERPRETATIONS</code> object at the top.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function InterpretationBlock({ need, rankLabel }: { need: NeedKey; rankLabel: string }) {
-  const data = INTERPRETATIONS[need];
-  return (
-    <Card className="rounded-2xl shadow-sm">
-      <CardContent className="p-6">
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div>
-            <h3 className="text-lg font-semibold">{data.title}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{rankLabel}</p>
-          </div>
-          <Badge variant="outline">{NEED_LABELS[need]}</Badge>
-        </div>
-
-        <Separator className="my-4" />
-
-        <p className="text-sm leading-6">{data.meaning}</p>
-
-        <div className="mt-5 grid gap-5 md:grid-cols-2">
-          <div>
-            <h4 className="text-sm font-semibold">What to seek</h4>
-            <ul className="mt-2 list-disc space-y-2 pl-5 text-sm">
-              {data.seek.map((x) => (
-                <li key={x}>{x}</li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-semibold">What to avoid</h4>
-            <ul className="mt-2 list-disc space-y-2 pl-5 text-sm">
-              {data.avoid.map((x) => (
-                <li key={x}>{x}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <div className="mt-5 rounded-2xl border p-4">
-          <h4 className="text-sm font-semibold">Decision prompts</h4>
-          <ul className="mt-2 list-disc space-y-2 pl-5 text-sm">
-            {data.prompts.map((x) => (
-              <li key={x}>{x}</li>
-            ))}
-          </ul>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
