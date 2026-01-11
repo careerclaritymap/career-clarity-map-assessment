@@ -258,6 +258,8 @@ export default function App() {
     }, {} as Record<string, number | null>)
   );
   const [submitted, setSubmitted] = useState(false);
+    const [isCheckingPayment, setIsCheckingPayment] = useState(false);
+    const [showPaywall, setShowPaywall] = useState(false);
 
   const resultsRef = useRef<HTMLDivElement | null>(null);
   const top1Ref = useRef<HTMLDivElement | null>(null);
