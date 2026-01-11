@@ -468,7 +468,7 @@ export default function App() {
           }
         }}
 
-                    disabled={!canSubmit}
+                    disabled={!canSubmit || isCheckingPayment}
                     className={"rounded-2xl " + (canSubmit ? "bg-green-600 hover:bg-green-700 text-white" : "")}
                   >
                     <span>See my results</span>
