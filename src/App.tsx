@@ -471,7 +471,7 @@ export default function App() {
                     disabled={!canSubmit || isCheckingPayment}
                     className={"rounded-2xl " + (canSubmit ? "bg-green-600 hover:bg-green-700 text-white" : "")}
                   >
-                    <span>See my results</span>
+                    <span>{isCheckingPayment ? "Checking payment..." : "See my results"}</span>
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
