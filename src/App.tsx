@@ -474,6 +474,24 @@ export default function App() {
                     <span>{isCheckingPayment ? "Checking payment..." : "See my results"}</span>
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
+                  
+        {showPaywall && (
+          <Card className="mt-4 rounded-2xl border-2 border-amber-200 bg-amber-50">
+            <CardContent className="p-6 text-center">
+              <h3 className="text-xl font-semibold text-amber-900">Payment required</h3>
+              <p className="mt-3 text-sm text-amber-800">
+                To view your results and download your PDF report, please complete payment.
+              </p>
+              <Button
+                className="mt-4 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white"
+                onClick={() => window.open('https://buy.stripe.com/6oU5kbdZy3Jkce61b50Jq00', '_blank')}
+              >
+                Complete payment
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
                 </div>
 
                 {!canSubmit && <p className="text-sm text-muted-foreground">Please answer all questions to view your results.</p>}
