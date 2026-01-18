@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Download, ArrowRight, RotateCcw } from "lucide-react";
+import emailjs from "@emailjs/browser";
 
 // NOTE: This is a self-contained MVP you can extend.
 // - 21 Likert questions (1–5)
@@ -260,6 +261,36 @@ export default function App() {
   const [submitted, setSubmitted] = useState(false);
     const [isCheckingPayment, setIsCheckingPayment] = useState(false);
     const [showPaywall, setShowPaywall] = useState(false);
+    const [emailSending, setEmailSending] = useState(false);
+    const [emailSent, setEmailSent] = useState(false);
+    const [emailError, setEmailError] = useState<string | null>(null);
+
+    // Helper function to send results email via EmailJS
+    const sendResultsEmail = async (userEmail: string, userName: string, top1: string, top2: string) => {
+          try {
+                  const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+                  const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+                  const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+                  await emailjs.send(
+                            serviceId,
+                            templateId,
+                            {
+                                        to_email: userEmail,
+                                        to_name: userName || "there",
+                                        top_driver_1: NEED_LABELS[top1 as NeedKey] || "",
+                                        top_driver_2: NEED_LABELS[top2 as NeedKey] || "",
+                                        results_link: "https://assessment.careerclaritymap.com"
+                                                  },
+                            publicKey
+                          );
+
+                  return true;
+                } catch (error) {
+                  console.error("Failed to send email:", error);
+                  return false;
+                }
+        };
 
   const resultsRef = useRef<HTMLDivElement | null>(null);
   const top1Ref = useRef<HTMLDivElement | null>(null);
@@ -457,6 +488,32 @@ export default function App() {
             if (data.paid) {
               setShowPaywall(false);
               setSubmitted(true);
+
+                              // Send results email
+                              const day = new Date().toISOString().slice(0, 10);
+                              const emailKey = `email_sent_${email}_${day}`;
+                              if (!localStorage.getItem(emailKey)) {
+                                                  setEmailSending(true);
+                                                  try {
+                                                                        // Get top 2 drivers
+                                                                        const sortedNeeds = (Object.entries(scores.sums) as [NeedKey, number][])
+                                                                          .sort((a, b) => b[1] - a[1]);
+                                                                        const top1 = sortedNeeds[0]?.[0] || "";
+                                                                        const top2 = sortedNeeds[1]?.[0] || "";
+
+                                                                        const success = await sendResultsEmail(email, name, top1, top2);
+                                                                        if (success) {
+                                                                                                setEmailSent(true);
+                                                                                                localStorage.setItem(emailKey, "1");
+                                                                                              } else {
+                                                                                                setEmailError("Failed to send email");
+                                                                                              }
+                                                                      } catch (err) {
+                                                                        setEmailError("Error sending email");
+                                                                      } finally {
+                                                                        setEmailSending(false);
+                                                                      }
+                                                }
             } else {
               setShowPaywall(true);
             }
