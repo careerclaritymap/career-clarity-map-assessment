@@ -343,6 +343,58 @@ export default function App() {
     return { top1, top2 } as { top1?: NeedKey; top2?: NeedKey };
   }, [scores]);
 
+    // Check for session_id in URL on mount (after Stripe payment)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    
+    if (sessionId && !submitted) {
+      setIsCheckingPayment(true);
+      
+      fetch(`/api/verify-payment?session_id=${encodeURIComponent(sessionId)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.paid && data.email) {
+            // Auto-fill email from payment
+            setEmail(data.email);
+            // Auto-submit the assessment if all answers are complete
+            if (completedCount === QUESTIONS.length) {
+              setSubmitted(true);
+              // Send results email
+              const day = new Date().toISOString().slice(0, 10);
+              const emailKey = `email_sent_${data.email}_${day}`;
+              if (!localStorage.getItem(emailKey)) {
+                setEmailSending(true);
+                const sortedScores = scores.slice().sort((a, b) => b.pct - a.pct);
+                const top1 = sortedScores[0]?.key || '';
+                const top2 = sortedScores[1]?.key || '';
+                sendResultsEmail(data.email, name, top1, top2)
+                  .then(success => {
+                    if (success) {
+                      setEmailSent(true);
+                      localStorage.setItem(emailKey, '1');
+                    } else {
+                      setEmailError('Failed to send email');
+                    }
+                  })
+                  .catch(() => setEmailError('Error sending email'))
+                  .finally(() => setEmailSending(false));
+              }
+            }
+          } else {
+            setShowPaywall(true);
+          }
+        })
+        .catch(error => {
+          console.error('Payment verification failed:', error);
+          setShowPaywall(true);
+        })
+        .finally(() => {
+          setIsCheckingPayment(false);
+        });
+    }
+  }, []);
+
   useEffect(() => {
     if (!submitted) return;
     // Auto-scroll: first to results, then to top1 interpretation.
@@ -481,48 +533,8 @@ export default function App() {
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
                   <Button
                     onClick={async () => {
-          setIsCheckingPayment(true);
-          try {
-            const res = await fetch(`/api/verify-payment?email=${encodeURIComponent(email)}`);
-            const data = await res.json();
-            if (data.paid) {
-              setShowPaywall(false);
-              setSubmitted(true);
-
-                              // Send results email
-                              const day = new Date().toISOString().slice(0, 10);
-                              const emailKey = `email_sent_${email}_${day}`;
-                              if (!localStorage.getItem(emailKey)) {
-                                                  setEmailSending(true);
-                                                  try {
-                                                                        // Get top 2 drivers
-                                                                        const sortedNeeds = (Object.entries(scores.sums) as [NeedKey, number][])
-                                                                          .sort((a, b) => b[1] - a[1]);
-                                                                        const top1 = sortedNeeds[0]?.[0] || "";
-                                                                        const top2 = sortedNeeds[1]?.[0] || "";
-
-                                                                        const success = await sendResultsEmail(email, name, top1, top2);
-                                                                        if (success) {
-                                                                                                setEmailSent(true);
-                                                                                                localStorage.setItem(emailKey, "1");
-                                                                                              } else {
-                                                                                                setEmailError("Failed to send email");
-                                                                                              }
-                                                                      } catch (err) {
-                                                                        setEmailError("Error sending email");
-                                                                      } finally {
-                                                                        setEmailSending(false);
-                                                                      }
-                                                }
-            } else {
-              setShowPaywall(true);
-            }
-          } catch (error) {
-            console.error('Payment verification failed:', error);
-            setShowPaywall(true);
-          } finally {
-            setIsCheckingPayment(false);
-          }
+          // Show paywall - payment required
+                setShowPaywall(true);}
         }}
 
                     disabled={!canSubmit || isCheckingPayment}
