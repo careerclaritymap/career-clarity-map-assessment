@@ -21,11 +21,11 @@ export default async function handler(
   }
 
   try {
-    // Get email from query string
-    const email = req.query.email as string;
+    // Get session_id from query string
+    const sessionId = req.query.session_id as string;
 
-    if (!email) {
-      return res.status(400).json({ error: 'Email parameter is required' });
+    if (!sessionId) {
+      return res.status(400).json({ error: 'session_id parameter is required' });
     }
 
     // Get Stripe secret key from environment variable
@@ -41,31 +41,21 @@ export default async function handler(
       apiVersion: '2024-12-18.acacia',
     });
 
-    // Calculate date 30 days ago
-    const thirtyDaysAgo = Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60);
+    // Retrieve the Checkout Session
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    // Search for successful charges matching the email
-    const charges = await stripe.charges.list({
-      limit: 100,
-      created: {
-        gte: thirtyDaysAgo,
-      },
+    // Check if payment was successful
+    const paid = session.payment_status === 'paid';
+
+    // Get customer email from session
+    const email = session.customer_details?.email || session.customer_email;
+
+    // Return result with both paid status and email
+    return res.status(200).json({ 
+      paid,
+      email: email || null
     });
 
-    // Filter charges by email and successful status
-    const matchingCharges = charges.data.filter(
-      (charge) =>
-        charge.billing_details?.email?.toLowerCase() === email.toLowerCase() &&
-        charge.status === 'succeeded' &&
-        charge.paid === true
-    );
-
-    // Return result
-    if (matchingCharges.length > 0) {
-      return res.status(200).json({ paid: true });
-    } else {
-      return res.status(200).json({ paid: false });
-    }
   } catch (error) {
     console.error('Error verifying payment:', error);
     return res.status(500).json({ 
