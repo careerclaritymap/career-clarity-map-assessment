@@ -349,6 +349,27 @@ export default function App() {
     const sessionId = urlParams.get('session_id');
     
     if (sessionId && !submitted) {
+          // Check localStorage for recent payment (24-hour expiry)
+    const storedPayment = localStorage.getItem(`paid_${email}`);
+    if (storedPayment && email) {
+      try {
+        const paymentData = JSON.parse(storedPayment);
+        const hoursSincePayment = (Date.now() - paymentData.timestamp) / (1000 * 60 * 60);
+        if (hoursSincePayment < 24) {
+          // Valid payment found in localStorage
+          if (completedCount === QUESTIONS.length) {
+            setSubmitted(true);
+          }
+          return; // Skip API call
+        } else {
+          // Expired, remove it
+          localStorage.removeItem(`paid_${email}`);
+        }
+      } catch (e) {
+        console.error('Error parsing stored payment:', e);
+      }
+    }
+
       setIsCheckingPayment(true);
       
       fetch(`/api/verify-payment?session_id=${encodeURIComponent(sessionId)}`)
@@ -357,6 +378,11 @@ export default function App() {
           if (data.paid && data.email) {
             // Auto-fill email from payment
             setEmail(data.email);
+                      // Store payment in localStorage for 24 hours
+          localStorage.setItem(`paid_${data.email}`, JSON.stringify({
+            timestamp: Date.now(),
+            session_id: sessionId
+          }));
             // Auto-submit the assessment if all answers are complete
             if (completedCount === QUESTIONS.length) {
               setSubmitted(true);
@@ -553,7 +579,7 @@ export default function App() {
               </p>
               <Button
                 className="mt-4 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white"
-                onClick={() => window.open('https://buy.stripe.com/3cI9AT1cM8003Ia7zt0Jq01', '_blank')}
+                onClick={() => window.location.href = 'https://buy.stripe.com/3cI9AT1cM8003Ia7zt0Jq01'
               >
                 Complete payment
               </Button>
