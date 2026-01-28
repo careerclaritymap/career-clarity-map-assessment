@@ -534,7 +534,7 @@ export default function App() {
                   <Button
                     onClick={async () => {
           // Show paywall - payment required
-                setShowPaywall(true);}
+                setShowPaywall(true);
         }}
 
                     disabled={!canSubmit || isCheckingPayment}
