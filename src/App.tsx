@@ -553,7 +553,7 @@ export default function App() {
               </p>
               <Button
                 className="mt-4 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white"
-                onClick={() => window.open('https://buy.stripe.com/6oU5kbdZy3Jkce61b50Jq00', '_blank')}
+                onClick={() => window.open('https://buy.stripe.com/3cI9AT1cM8003Ia7zt0Jq01', '_blank')}
               >
                 Complete payment
               </Button>
