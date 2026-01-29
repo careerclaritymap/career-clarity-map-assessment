@@ -580,6 +580,7 @@ export default function App() {
               <Button
                 className="mt-4 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white"
                 onClick={() =>  {window.location.href = 'https://buy.stripe.com/3cI9AT1cM8003Ia7zt0Jq }01'}
+                                  >
                 Complete payment
               </Button>
             </CardContent>onClick={() => { window.location.href = 'https://buy.stripe.com/3cI9AT1cM8003Ia7zt0Jq01' }}
