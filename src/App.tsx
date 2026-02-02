@@ -286,8 +286,7 @@ export default function App() {
 
               <div className="space-y-10">
                 {QUESTIONS.map((q, idx) => (
-                  <div key={q.id} className="space-y-4"className={`space-y-4 p-4 rounded-lg transition-colors ${answers[q.id] === null ? 'bg-pink-50' : 'bg-green-50'}`}
-                    <p className="text-lg font-medium">{idx + 1}. {q.text}</p>
+              <div key={q.id} className={`space-y-4 p-4 rounded-lg transition-colors ${answers[q.id] === null ? 'bg-pink-50' : 'bg-green-50'}`}>                    <p className="text-lg font-medium">{idx + 1}. {q.text}</p>
                     <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                       {SCALE.map(s => (
                         <Button
