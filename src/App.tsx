@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Download, ArrowRight, RotateCcw } from "lucide-react";
+import { Download, ArrowRight, RotateCcw, Check } from "lucide-react";
 import emailjs from "@emailjs/browser";
 
 type NeedKey = "certainty" | "variety" | "significance" | "connection" | "growth" | "contribution";
@@ -286,7 +286,7 @@ export default function App() {
 
               <div className="space-y-10">
                 {QUESTIONS.map((q, idx) => (
-                  <div key={q.id} className="space-y-4">
+                  <div key={q.id} className="space-y-4"className={`space-y-4 p-4 rounded-lg transition-colors ${answers[q.id] === null ? 'bg-pink-50' : 'bg-green-50'}`}
                     <p className="text-lg font-medium">{idx + 1}. {q.text}</p>
                     <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                       {SCALE.map(s => (
@@ -296,9 +296,8 @@ export default function App() {
                           className="h-10"
                           onClick={() => setAnswers(prev => ({ ...prev, [q.id]: s.v }))}
                         >
-                          {s.label}
-                        </Button>
-                      ))}
+                          {s.label}{answers[q.id] === s.v && <Check className="inline-block mr-1 h-4 w-4" />}
+                </Button>                      ))}
                     </div>
                   </div>
                 ))}
