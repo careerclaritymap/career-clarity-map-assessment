@@ -223,7 +223,7 @@ export default function App() {
             // In a real scenario, you'd upload the PDF somewhere or use a service that handles attachments.
             // For now, we'll send the data URL as a placeholder or just the text results.
           },
-          import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+          import.meta.env.VITE_EMAILJS_PUC_KEY
         );
         setEmailSent(true);
       }
