@@ -219,7 +219,7 @@ export default function App() {
             to_name: name || "User",
             top1: NEED_LABELS[topNeeds.top1!],
             top2: NEED_LABELS[topNeeds.top2!],
-            result_summary: scores.map(s => `${s.label}: ${s.pct}%`\n"),
+            
             // In a real scenario, you'd upload the PDF somewhere or use a service that handles attachments.
             // For now, we'll send the data URL as a placeholder or just the text results.
           },
