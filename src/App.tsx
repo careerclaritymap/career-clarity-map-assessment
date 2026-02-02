@@ -5,9 +5,8 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Download, ArrowRight, RotateCcw, Check } from "lucide-react";
+import { Download, ArrowRight, RotateCcw } from "lucide-react";
 import emailjs from "@emailjs/browser";
-
 type NeedKey = "certainty" | "variety" | "significance" | "connection" | "growth" | "contribution";
 type Question = {
   id: string;
@@ -295,8 +294,14 @@ export default function App() {
                           className="h-10"
                           onClick={() => setAnswers(prev => ({ ...prev, [q.id]: s.v }))}
                         >
-                          {s.label}{answers[q.id] === s.v && <Check className="inline-block mr-1 h-4 w-4" />}
-                </Button>                      ))}
+                <div className="flex items-center gap-2">
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    answers[q.id] === s.v ? 'border-green-600 bg-green-600' : 'border-gray-300'
+                  }`}>
+                    {answers[q.id] === s.v && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
+                  </div>
+                  <span>{s.label}</span>
+                </div>                </Button>                      ))}
                     </div>
                   </div>
                 ))}
