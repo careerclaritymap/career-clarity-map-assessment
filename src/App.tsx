@@ -5,14 +5,25 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Download, ArrowRight, RotateCcw } from "lucide-react";
+import { Download, ArrowRight, RotateCcw, CheckCircle2, Target, Calendar } from "lucide-react";
 import emailjs from "@emailjs/browser";
+
 type NeedKey = "certainty" | "variety" | "significance" | "connection" | "growth" | "contribution";
+
 type Question = {
   id: string;
   text: string;
   need: NeedKey;
 };
+
+interface MotivationInfo {
+  title: string;
+  description: string;
+  seek: string[];
+  avoid: string[];
+  reflection: string[];
+  actionSteps: string[];
+}
 
 const NEED_LABELS: Record<NeedKey, string> = {
   certainty: "Certainty (stability & predictability)",
@@ -34,349 +45,454 @@ const QUESTIONS: Question[] = [
   { id: "q8", need: "significance", text: "I want my role to feel important and not easily replaceable." },
   { id: "q9", need: "significance", text: "I’m motivated by achieving visible results or measurable wins." },
   { id: "q10", need: "significance", text: "Responsibility, influence, or status plays a role in what motivates me." },
-  { id: "q11", need: "connection", text: "Positive relationships at work are essential for me to feel engaged." },
-  { id: "q12", need: "connection", text: "I prefer collaboration and teamwork over working mostly alone." },
-  { id: "q13", need: "connection", text: "Feeling like I belong in a team or culture matters a lot to me." },
-  { id: "q14", need: "growth", text: "I feel restless if I’m not learning, improving, or being challenged." },
-  { id: "q15", need: "growth", text: "Personal development is a key part of what I want from my career." },
-  { id: "q16", need: "growth", text: "I’m willing to face discomfort if it helps me grow." },
-  { id: "q17", need: "growth", text: "I lose motivation in roles where I’ve already mastered everything." },
-  { id: "q18", need: "contribution", text: "I want my work to have a positive impact beyond just performance metrics." },
-  { id: "q19", need: "contribution", text: "Meaning matters more to me than money alone." },
-  { id: "q20", need: "contribution", text: "I feel fulfilled when my work helps others or serves a bigger purpose." },
-  { id: "q21", need: "contribution", text: "I want to feel proud of what my work contributes to the world." },
+  { id: "q11", need: "connection", text: "Strong relationships with my colleagues are essential for my happiness at work." },
+  { id: "q12", need: "connection", text: "I prefer collaborative environments over working entirely in isolation." },
+  { id: "q13", need: "connection", text: "Feeling like I belong to a team or community is a top priority." },
+  { id: "q14", need: "growth", text: "I constantly seek opportunities to learn new skills and improve myself." },
+  { id: "q15", need: "growth", text: "I feel stagnant if I’m not being pushed out of my comfort zone." },
+  { id: "q16", need: "growth", text: "Personal and professional development are more important than just a steady paycheck." },
+  { id: "q17", need: "growth", text: "I enjoy tasks that require deep thinking and problem-solving." },
+  { id: "q18", need: "contribution", text: "I want my work to have a positive impact on others or the world." },
+  { id: "q19", need: "contribution", text: "Helping others succeed gives me a deep sense of fulfillment." },
+  { id: "q20", need: "contribution", text: "I care about the 'why' behind my work more than the specific tasks." },
+  { id: "q21", need: "contribution", text: "Generosity and giving back are core values in my career." },
 ];
 
-const SCALE = [
-  { v: 1, label: "1 — Not at all" },
-  { v: 2, label: "2 — Slightly" },
-  { v: 3, label: "3 — Neutral" },
-  { v: 4, label: "4 — Mostly" },
-  { v: 5, label: "5 — Very much" },
-];
-
-const INTERPRETATIONS: Record<NeedKey, { title: string; meaning: string; seek: string[]; avoid: string[]; prompts: string[] }> = {
+const MOTIVATIONS: Record<NeedKey, MotivationInfo> = {
   certainty: {
-    title: "Certainty: You thrive on stability and clear expectations",
-    meaning: "When Certainty is high, you feel safest and most energized in environments with clarity, predictability, and reliable standards.",
-    seek: ["Clear goals, defined roles, and consistent expectations", "Reliable processes and transparent decision-making", "Steady pace and realistic planning horizons"],
-    avoid: ["Frequent chaos, shifting priorities, and unclear ownership", "Constant ‘firefighting’ culture with little structure", "Unpredictable income/conditions"],
-    prompts: ["Where will I get clarity on success and priorities each week?", "How are decisions made when things change?", "What does stability look like in this role and team?"],
+    title: "Certainty & Stability",
+    description: "You thrive when you have a clear roadmap and a stable environment. Your primary driver is the need for security, order, and predictability. You are excellent at creating systems and ensuring that things run smoothly and reliably.",
+    seek: ["Standard Operating Procedures (SOPs)", "Long-term security and benefits", "Clear hierarchies and reporting lines", "Predictable schedules"],
+    avoid: ["Constant 'pivoting' without clear reasons", "Unstructured environments", "High-risk startups without a plan", "Ambiguous job descriptions"],
+    reflection: ["How can I create more structure in my current role?", "What systems can I build to reduce daily stress?"],
+    actionSteps: [
+      "Document your core processes to create a 'Standard Operating Procedure' for your role.",
+      "Schedule a 1-on-1 with your manager to clarify long-term expectations and KPIs.",
+      "Create a 'buffer' in your schedule to handle unexpected tasks without losing focus.",
+      "Review your financial plan to ensure your need for security is met outside of work.",
+      "Identify one area of ambiguity in your project and proactively define its boundaries."
+    ]
   },
   variety: {
-    title: "Variety: You thrive on freedom, change, and momentum",
-    meaning: "When Variety is high, you feel alive in roles with flexibility, novelty, and room to explore.",
-    seek: ["Flexible schedules, dynamic responsibilities, and experimentation", "Autonomy and room to change how you work", "Projects with variety, learning-by-doing, and movement"],
-    avoid: ["Highly repetitive tasks and rigid bureaucracy", "Slow environments where change is resisted", "Micromanagement that restricts freedom"],
-    prompts: ["How much autonomy will I have day-to-day?", "How often will work change and evolve here?", "Will this role still feel fresh in 6 months?"],
+    title: "Variety & Adventure",
+    description: "Routine is your enemy. You need frequent changes in tasks, environments, or challenges to stay engaged. You are likely a natural problem solver who enjoys 'firefighting' or exploring new territories.",
+    seek: ["Diverse projects and tasks", "Travel or remote work flexibility", "Cross-departmental collaboration", "Opportunities for innovation"],
+    avoid: ["Highly repetitive data entry", "Static roles with no growth", "Strict 9-to-5 desk environments", "Micromanagement"],
+    reflection: ["What new skill can I start learning this week?", "How can I introduce more variety into my daily routine?"],
+    actionSteps: [
+      "Volunteer for a cross-functional project outside your immediate department.",
+      "Redesign your workspace or change your working location twice a week.",
+      "Pitch a 'pilot project' for a new tool or methodology you've discovered.",
+      "Set a goal to learn one new technical or soft skill every month.",
+      "Request a rotation of tasks with a colleague to experience a different perspective."
+    ]
   },
   significance: {
-    title: "Significance: You thrive on achievement, recognition, and impact",
-    meaning: "When Significance is high, you’re motivated by meaningful wins, being valued, and knowing your work matters.",
-    seek: ["Clear ownership and visible outcomes", "Feedback and recognition tied to real contribution", "Roles with responsibility, influence, or high standards"],
-    avoid: ["Being underutilized or invisible in a role", "Environments where excellence goes unnoticed", "Unclear performance signals or politics-only recognition"],
-    prompts: ["How is great work recognized here?", "What does success look like, and who notices it?", "Will I have ownership over meaningful outcomes?"],
+    title: "Significance & Achievement",
+    description: "You are driven by the desire to be unique, important, and recognized for your excellence. You thrive on feedback, measurable results, and the feeling that your contribution is vital to the organization's success.",
+    seek: ["Leadership opportunities", "Public recognition and awards", "High-visibility projects", "Clear paths to promotion"],
+    avoid: ["Behind-the-scenes roles with no credit", "Generalist roles where you're 'just a number'", "Lack of performance feedback", "Flat organizational structures"],
+    reflection: ["What are the top 3 wins I've achieved this month?", "Who needs to know about the impact I'm having?"],
+    actionSteps: [
+      "Keep a 'Wins Journal' and share a monthly summary with your leadership team.",
+      "Take ownership of a high-stakes project that has clear, measurable outcomes.",
+      "Apply for an industry award or a speaking slot at an internal event.",
+      "Identify a mentor who has reached the level of influence you aspire to.",
+      "Clearly define your unique selling proposition (USP) within the company."
+    ]
   },
   connection: {
-    title: "Connection: You thrive on belonging and strong relationships",
-    meaning: "When Connection is high, your energy is closely tied to people, culture, and trust.",
-    seek: ["Supportive teams, healthy culture, and psychological safety", "Collaboration, mentoring, and clear communication", "Values alignment and a sense of belonging"],
-    avoid: ["Toxic competition or isolation", "Cold or dismissive communication norms", "Cultures where relationships are ‘optional’"],
-    prompts: ["How do people treat each other under stress?", "Who will I collaborate with most, and how?", "Do I feel respected and included here?"],
+    title: "Connection & Belonging",
+    description: "For you, work is about people. You thrive in collaborative, supportive environments where you feel a sense of shared mission and deep personal connection with your colleagues.",
+    seek: ["Team-based projects", "Mentorship roles", "Collaborative tools and spaces", "Companies with a strong culture"],
+    avoid: ["Highly competitive 'shark' cultures", "Isolated remote roles without social contact", "Transactional communication", "Siloed departments"],
+    reflection: ["Who can I help or support today?", "How can I strengthen my relationship with my key stakeholders?"],
+    actionSteps: [
+      "Organize a casual coffee chat or team-building activity once a week.",
+      "Become a mentor to a new hire or a junior team member.",
+      "Initiate a collaborative brainstorming session for a shared challenge.",
+      "Send at least three 'shout-outs' or notes of appreciation to colleagues weekly.",
+      "Participate in or lead an internal community or employee resource group."
+    ]
   },
   growth: {
-    title: "Growth: You thrive on learning, challenge, and development",
-    meaning: "When Growth is high, stagnation is your enemy. You feel fulfilled when you’re stretching your skills.",
-    seek: ["Clear learning curve, feedback, and skill development", "Challenging goals and meaningful stretch projects", "Mentorship, training, and room to advance"],
-    avoid: ["Static roles with little learning", "Comfortable stagnation or ‘same year repeated’", "Environments that punish learning mistakes"],
-    prompts: ["What will I learn in the first 90 days?", "How does this company support development?", "Where is the growth path after 6–12 months?"],
+    title: "Growth & Learning",
+    description: "You have an insatiable hunger for progress. If you aren't learning, you're dying (professionally). You value challenges that force you to expand your capabilities and evolve into a better version of yourself.",
+    seek: ["Challenging assignments", "Budget for courses and conferences", "Intellectually stimulating work", "A culture of continuous feedback"],
+    avoid: ["'Comfort zone' roles with no new skills", "Static technology stacks", "Repetitive tasks you've already mastered", "Lack of professional development"],
+    reflection: ["Where am I being challenged the most right now?", "What is the biggest gap in my knowledge that I want to close?"],
+    actionSteps: [
+      "Dedicate 4 hours a week (Deep Work) to learning a complex new skill.",
+      "Request a 360-degree feedback review to identify your growth areas.",
+      "Enroll in an advanced certification or professional development program.",
+      "Teach a 'Lunch and Learn' session on a topic you are currently mastering.",
+      "Set a 'stretch goal' for your next project that feels slightly beyond your current reach."
+    ]
   },
   contribution: {
-    title: "Contribution: You thrive on meaning and making a positive difference",
-    meaning: "When Contribution is high, you need your work to stand for something.",
-    seek: ["Mission clarity and real-world impact", "Work that helps customers, community, or a bigger purpose", "Organizations with values you respect"],
-    avoid: ["Work that feels empty or misaligned with your values", "Environments focused only on numbers with no meaning", "Roles where impact is unclear or purely extractive"],
-    prompts: ["Who benefits from my work, and how?", "Do I respect what this organization contributes?", "Will I feel proud of this work a year from now?"],
-  },
+    title: "Contribution & Impact",
+    description: "You are focused on the 'Big Picture'. You need to know that your work is serving a purpose beyond yourself or even the company. You find meaning in giving, helping, and creating a positive legacy.",
+    seek: ["Mission-driven organizations", "CSR (Corporate Social Responsibility) initiatives", "Roles with direct impact on end-users", "Ethical and sustainable projects"],
+    avoid: ["Purely profit-driven companies", "Work that feels 'meaningless' or harmful", "Lack of transparency about company impact", "Self-centered leadership"],
+    reflection: ["How does my daily work improve someone else's life?", "What legacy do I want to leave in my professional career?"],
+    actionSteps: [
+      "Identify one way to make your current project more sustainable or ethical.",
+      "Connect directly with an end-user to hear how your work has helped them.",
+      "Lead a charity or volunteering initiative within your organization.",
+      "Advocate for a more mission-aligned approach in your team's strategy.",
+      "Create a 'Mission Statement' for your own role that focuses on the value you give."
+    ]
+  }
 };
 
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
-}
-
-function formatDateHuman(d: Date) {
-  return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-}
-
-async function exportPdfFromElement(el: HTMLElement, filename: string) {
-  const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import("html2canvas"), import("jspdf")]);
-  const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff", windowWidth: el.scrollWidth });
-  const imgData = canvas.toDataURL("image/png");
-  const pdf = new jsPDF({ orientation: "p", unit: "pt", format: "a4" });
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-  const imgWidth = pageWidth;
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  let y = 0;
-  let remaining = imgHeight;
-  while (remaining > 0) {
-    pdf.addImage(imgData, "PNG", 0, y, imgWidth, imgHeight);
-    remaining -= pageHeight;
-    if (remaining > 0) {
-      pdf.addPage();
-      y -= pageHeight;
-    }
-  }
-  pdf.save(filename);
-  return canvas; // Return for EmailJS
-}
-
-export default function App() {
-  const [name, setName] = useState("");
+const App = () => {
+  const [started, setStarted] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [scores, setScores] = useState<Record<NeedKey, number>>({
+    certainty: 0,
+    variety: 0,
+    significance: 0,
+    connection: 0,
+    growth: 0,
+    contribution: 0,
+  });
+  const [showResults, setShowResults] = useState(false);
   const [email, setEmail] = useState("");
-  const [hasPaid, setHasPaid] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [answers, setAnswers] = useState<Record<string, number | null>>(() =>
-    QUESTIONS.reduce((acc, q) => { acc[q.id] = null; return acc; }, {} as Record<string, number | null>)
-  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [emailSending, setEmailSending] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
 
-  const resultsRef = useRef<HTMLDivElement | null>(null);
-  const top1Ref = useRef<HTMLDivElement | null>(null);
-  const top2Ref = useRef<HTMLDivElement | null>(null);
+  const totalQuestions = QUESTIONS.length;
+  const progress = ((currentStep) / totalQuestions) * 100;
 
-  const completedCount = Object.values(answers).filter((v) => v !== null).length;
-  const progress = Math.round((completedCount / QUESTIONS.length) * 100);
+  const handleAnswer = (value: number) => {
+    const question = QUESTIONS[currentStep];
+    setScores(prev => ({
+      ...prev,
+      [question.need]: prev[question.need] + value
+    }));
 
-  const scores = useMemo(() => {
-    const sums = { certainty: 0, variety: 0, significance: 0, connection: 0, growth: 0, contribution: 0 };
-    const counts = { certainty: 0, variety: 0, significance: 0, connection: 0, growth: 0, contribution: 0 };
-    for (const q of QUESTIONS) {
-      const v = answers[q.id];
-      if (v !== null) { sums[q.need] += v; counts[q.need] += 1; }
+    if (currentStep < totalQuestions - 1) {
+      setCurrentStep(prev => prev + 1);
+    } else {
+      setShowResults(true);
     }
-    const normalized = (Object.keys(sums) as NeedKey[]).map((k) => {
-      const avg = counts[k] ? sums[k] / counts[k] : 0;
-      const pct = counts[k] ? ((avg - 1) / 4) * 100 : 0;
-      return { key: k, label: NEED_LABELS[k], avg, pct: clamp(Math.round(pct), 0, 100) };
-    });
-    return normalized.sort((a, b) => b.pct - a.pct);
-  }, [answers]);
+  };
 
-  const topNeeds = { top1: scores[0]?.key, top2: scores[1]?.key };
+  const sortedResults = useMemo(() => {
+    return Object.entries(scores)
+      .map(([key, score]) => ({
+        key: key as NeedKey,
+        score,
+        percentage: Math.round((score / (QUESTIONS.filter(q => q.need === key).length * 5)) * 100)
+      }))
+      .sort((a, b) => b.score - a.score);
+  }, [scores]);
 
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const sessionId = urlParams.get('session_id');
-    
-    // Check localStorage first
-    const stored = localStorage.getItem('career_clarity_paid');
-    if (stored) {
-      const data = JSON.parse(stored);
-      if (Date.now() - data.timestamp < 24 * 60 * 60 * 1000) {
-        setHasPaid(true);
-        if (data.email) setEmail(data.email);
-      }
-    }
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
-    if (sessionId && !hasPaid) {
-      setIsVerifying(true);
-      fetch(`/api/verify-payment?session_id=${sessionId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.paid) {
-            setHasPaid(true);
-            if (data.email) setEmail(data.email);
-            localStorage.setItem('career_clarity_paid', JSON.stringify({
-              timestamp: Date.now(),
-              email: data.email,
-              sessionId
-            }));
-          }
-        })
-        .finally(() => setIsVerifying(false));
-    }
-  }, []);
-
-  const sendResults = async () => {
-    if (!email) return;
-    setEmailSending(true);
     try {
-      const el = document.getElementById("pdf-root");
-      if (el) {
-        const [{ default: html2canvas }] = await Promise.all([import("html2canvas")]);
-        const canvas = await html2canvas(el, { scale: 1.5, useCORS: true });
-        const imgData = canvas.toDataURL("image/jpeg", 0.7);
-        
-        await emailjs.send(
-          import.meta.env.VITE_EMAILJS_SERVICE_ID,
-          import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-          {
-            to_email: email,
-            to_name: name || "User",
-            top1: NEED_LABELS[topNeeds.top1!],
-            top2: NEED_LABELS[topNeeds.top2!],
-          results_link: window.location.href,                      pdf_data: imgData, // base64 PDF image
-            
-         },
-          import.meta.env.VITE_EMAILJS_PUC_KEY
-        );
-        setEmailSent(true);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setEmailSending(false);
-    }
-  };
+      const templateParams = {
+        to_email: email,
+        results_summary: sortedResults.map(r => `${NEED_LABELS[r.key]}: ${r.percentage}%`).join("
+"),
+        primary_driver: MOTIVATIONS[sortedResults[0].key].title,
+        secondary_driver: MOTIVATIONS[sortedResults[1].key].title,
+        full_results_link: window.location.href,
+      };
 
-  const handleSubmit = () => {
-    if (completedCount === QUESTIONS.length && email) {
+      await emailjs.send(
+        "service_id", // Replace with your Service ID
+        "template_id", // Replace with your Template ID
+        templateParams,
+        "public_key" // Replace with your Public Key
+      );
       setSubmitted(true);
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: "smooth" });
-        sendResults();
-      }, 500);
+    } catch (error) {
+      console.error("Email failed:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  if (!hasPaid) {
+  if (!started) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <Card className="max-w-md w-full p-8 text-center space-y-6">
-          <h1 className="text-3xl font-bold">Career Clarity Map</h1>
-          <p className="text-gray-600">Unlock your personalized career motivation assessment today.</p>
-          <Button 
-            className="w-full h-12 text-lg bg-green-600 hover:bg-green-700"
-            onClick={() => window.location.href = 'https://buy.stripe.com/3cI9AT1cM8003Ia7zt0Jq01'}
-          >
-            {isVerifying ? "Verifying Access..." : "Secure Payment & Instant Access"}
-          </Button>
-          <p className="text-xs text-gray-400">One-time payment. Instant access to test & PDF report.</p>
+      <div className=\"min-h-screen bg-slate-50 flex items-center justify-center p-4\">
+        <Card className=\"max-w-2xl w-full\">
+          <CardContent className=\"pt-12 pb-12 text-center\">
+            <Badge className=\"mb-4 px-3 py-1 bg-blue-100 text-blue-700 hover:bg-blue-100 border-none\">Career Strategy Tool</Badge>
+            <h1 className=\"text-4xl font-bold mb-4 text-slate-900\">Career Clarity Map</h1>
+            <p className=\"text-xl text-slate-600 mb-8\">Discover your core professional drivers and build a career that truly fits you.</p>
+            <div className=\"grid grid-cols-1 md:grid-cols-2 gap-4 text-left mb-8\">
+              <div className=\"flex items-start gap-3\">
+                <CheckCircle2 className=\"text-blue-600 mt-1 h-5 w-5 shrink-0\" />
+                <p className=\"text-slate-600\">Identify what truly motivates you at work</p>
+              </div>
+              <div className=\"flex items-start gap-3\">
+                <CheckCircle2 className=\"text-blue-600 mt-1 h-5 w-5 shrink-0\" />
+                <p className=\"text-slate-600\">30+ actionable steps for your career growth</p>
+              </div>
+              <div className=\"flex items-start gap-3\">
+                <CheckCircle2 className=\"text-blue-600 mt-1 h-5 w-5 shrink-0\" />
+                <p className=\"text-slate-600\">Custom 30-day personalized action plan</p>
+              </div>
+              <div className=\"flex items-start gap-3\">
+                <CheckCircle2 className=\"text-blue-600 mt-1 h-5 w-5 shrink-0\" />
+                <p className=\"text-slate-600\">Full PDF report with detailed analysis</p>
+              </div>
+            </div>
+            <Button onClick={() => setStarted(true)} size=\"lg\" className=\"w-full md:w-auto px-12 h-14 text-lg bg-blue-600 hover:bg-blue-700\">
+              Start My Assessment <ArrowRight className=\"ml-2 h-5 w-5\" />
+            </Button>
+            <p className=\"mt-4 text-sm text-slate-400 font-medium\">Takes about 3 minutes • 21 Questions</p>
+          </CardContent>
         </Card>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-white">
-      <div className="mx-auto max-w-4xl px-4 py-10">
-        {!submitted ? (
-          <Card className="rounded-2xl shadow-sm p-6">
-            <div className="space-y-8">
-              <div className="flex justify-between items-end">
-                <div>
-                  <h2 className="text-2xl font-bold">Your Assessment</h2>
-                  <p className="text-sm text-gray-500">Answer all 21 questions to see your results.</p>
-                </div>
-                <div className="text-right">
-                  <span className="text-sm font-medium">{progress}% Complete</span>
-                  <Progress value={progress} className="w-32 mt-1" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input placeholder="First Name" value={name} onChange={e => setName(e.target.value)} />
-                <Input placeholder="Email Address" type="email" value={email} onChange={e => setEmail(e.target.value)} />
-              </div>
-
-              <div className="space-y-10">
-                {QUESTIONS.map((q, idx) => (
-              <div key={q.id} className={`space-y-4 p-4 rounded-lg transition-colors ${answers[q.id] === null ? 'bg-pink-50' : 'bg-green-50'}`}>                    <p className="text-lg font-medium">{idx + 1}. {q.text}</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-                      {SCALE.map(s => (
-                        <Button
-                          key={s.v}
-                          variant={answers[q.id] === s.v ? "default" : "outline"}
-                          className="h-10"
-                          onClick={() => setAnswers(prev => ({ ...prev, [q.id]: s.v }))}
-                        >
-                <div className="flex items-center gap-2">
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                    answers[q.id] === s.v ? 'border-green-600 bg-green-600' : 'border-gray-300'
-                  }`}>
-                    {answers[q.id] === s.v && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
-                  </div>
-                  <span>{s.label}</span>
-                </div>                </Button>                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <Button 
-                className="w-full h-12 text-lg bg-green-600 hover:bg-green-700"
-                disabled={completedCount < QUESTIONS.length || !email}
-                onClick={handleSubmit}
-              >
-                Get My Results
-              </Button>
-            </div>
-          </Card>
-        ) : (
-          <div className="space-y-8" ref={resultsRef}>
-            <Card className="p-8 space-y-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-3xl font-bold">Your Results, {name}!</h2>
-                  <p className="text-gray-500">Generated on {formatDateHuman(new Date())}</p>
-                </div>
-                <Button variant="outline" onClick={() => exportPdfFromElement(document.getElementById("pdf-root")!, `Career-Map-${name}.pdf`)}>
-                  <Download className="mr-2 h-4 w-4" /> Download PDF
-                </Button>
-              </div>
-              
-              {emailSent && <Badge className="bg-green-100 text-green-800 border-green-200">PDF sent to {email}</Badge>}
-
-              <div className="space-y-4">
-                {scores.map((s, i) => (
-                  <div key={s.key} className="space-y-1">
-                    <div className="flex justify-between text-sm font-medium">
-                      <span>#{i + 1} {s.label}</span>
-                      <span>{s.pct}%</span>
-                    </div>
-                    <Progress value={s.pct} className="h-2" />
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            <div id="pdf-root" className="space-y-6">
-              {topNeeds.top1 && <InterpretationBlock need={topNeeds.top1} rankLabel="Primary Driver" />}
-              {topNeeds.top2 && <InterpretationBlock need={topNeeds.top2} rankLabel="Secondary Driver" />}
-            </div>
+  if (showResults) {
+    return (
+      <div className=\"min-h-screen bg-slate-50 py-12 px-4\">
+        <div className=\"max-w-4xl mx-auto space-y-8\">
+          <div className=\"text-center space-y-2\">
+            <h1 className=\"text-3xl font-bold text-slate-900\">Your Career Clarity Map</h1>
+            <p className=\"text-slate-500\">Analysis of your core professional motivations</p>
           </div>
-        )}
+
+          <Card className=\"overflow-hidden border-none shadow-lg\">
+            <div className=\"bg-blue-600 p-8 text-white\">
+              <h2 className=\"text-xl font-semibold mb-6 opacity-90\">Motivation Overview</h2>
+              <div className=\"space-y-6\">
+                {sortedResults.map((result) => (
+                  <div key={result.key} className=\"space-y-2\">
+                    <div className=\"flex justify-between text-sm font-medium\">
+                      <span>{NEED_LABELS[result.key]}</span>
+                      <span>{result.percentage}%</span>
+                    </div>
+                    <Progress value={result.percentage} className=\"h-2 bg-blue-400/30 indicator-white\" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <CardContent className=\"p-8 bg-white\">
+              <div className=\"flex flex-col md:flex-row gap-6 items-center justify-between mb-8 p-6 bg-blue-50 rounded-xl border border-blue-100\">
+                <div className=\"space-y-1 text-center md:text-left\">
+                  <p className=\"text-sm font-semibold text-blue-600 uppercase tracking-wider\">Primary Driver</p>
+                  <h3 className=\"text-2xl font-bold text-slate-900\">{MOTIVATIONS[sortedResults[0].key].title}</h3>
+                </div>
+                {!submitted ? (
+                  <form onSubmit={handleEmailSubmit} className=\"flex flex-col sm:flex-row gap-2 w-full md:w-auto\">
+                    <Input 
+                      type=\"email\" 
+                      placeholder=\"Enter email for full report\" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className=\"min-w-[240px]\"
+                    />
+                    <Button type=\"submit\" disabled={isSubmitting} className=\"bg-blue-600 hover:bg-blue-700\">
+                      {isSubmitting ? \"Sending...\" : \"Get Full PDF Report\"}
+                    </Button>
+                  </form>
+                ) : (
+                  <div className=\"flex items-center gap-2 text-green-600 font-medium bg-green-50 px-4 py-2 rounded-lg\">
+                    <CheckCircle2 className=\"h-5 w-5\" /> Report sent! Check your inbox.
+                  </div>
+                )}
+              </div>
+
+              {/* 30-Day Action Plan Section */}
+              <div className=\"mb-12 space-y-6\">
+                <div className=\"flex items-center gap-2 mb-4\">
+                  <Calendar className=\"text-blue-600 h-6 w-6\" />
+                  <h2 className=\"text-2xl font-bold text-slate-900\">Your Personalized 30-Day Action Plan</h2>
+                </div>
+                
+                <div className=\"grid grid-cols-1 md:grid-cols-2 gap-4\">
+                  <div className=\"p-5 border border-slate-200 rounded-xl space-y-3\">
+                    <div className=\"flex items-center gap-2\">
+                      <Badge className=\"bg-slate-900\">Week 1</Badge>
+                      <h4 className=\"font-bold\">Assessment & Awareness</h4>
+                    </div>
+                    <p className=\"text-sm text-slate-600\">Focus on observing how your top drivers ({MOTIVATIONS[sortedResults[0].key].title}) manifest in your current daily tasks. Note down energy-draining vs. energy-giving moments.</p>
+                  </div>
+                  
+                  <div className=\"p-5 border border-blue-200 bg-blue-50/50 rounded-xl space-y-3\">
+                    <div className=\"flex items-center gap-2\">
+                      <Badge className=\"bg-blue-600\">Week 2</Badge>
+                      <h4 className=\"font-bold\">Quick Wins</h4>
+                    </div>
+                    <p className=\"text-sm text-slate-600\">Implement the first two action steps from your Primary Driver profile: \"{MOTIVATIONS[sortedResults[0].key].actionSteps[0]}\"</p>
+                  </div>
+                  
+                  <div className=\"p-5 border border-slate-200 rounded-xl space-y-3\">
+                    <div className=\"flex items-center gap-2\">
+                      <Badge className=\"bg-slate-900\">Week 3</Badge>
+                      <h4 className=\"font-bold\">Strategic Planning</h4>
+                    </div>
+                    <p className=\"text-sm text-slate-600\">Review your Secondary Driver ({MOTIVATIONS[sortedResults[1].key].title}) and identify one structural change you can propose to your manager to better align with it.</p>
+                  </div>
+                  
+                  <div className=\"p-5 border border-slate-200 rounded-xl space-y-3\">
+                    <div className=\"flex items-center gap-2\">
+                      <Badge className=\"bg-slate-900\">Week 4</Badge>
+                      <h4 className=\"font-bold\">Commitment & Accountability</h4>
+                    </div>
+                    <p className=\"text-sm text-slate-600\">Establish a monthly check-in habit. Review your 'Wins Journal' and set growth targets for the next quarter based on your motivators.</p>
+                  </div>
+                </div>
+                
+                <div className=\"bg-amber-50 border border-amber-100 p-4 rounded-lg flex items-start gap-3\">
+                  <Target className=\"text-amber-600 h-5 w-5 mt-0.5\" />
+                  <p className=\"text-sm text-amber-800\"><span className=\"font-bold\">Pro Tip:</span> Share these results with your manager. 72% of professionals report higher satisfaction when their leaders understand their core drivers.</p>
+                </div>
+              </div>
+
+              <Separator className=\"my-12\" />
+
+              <div className=\"space-y-16\">
+                <h2 className=\"text-2xl font-bold text-slate-900 text-center mb-8\">Complete Motivation Profile</h2>
+                {sortedResults.map((result, index) => {
+                  const info = MOTIVATIONS[result.key];
+                  const strengthLabel = index === 0 ? \"Primary Driver\" : index === 1 ? \"Important Factor\" : index < 4 ? \"Moderate Need\" : \"Lower Priority\";
+                  const strengthColor = index === 0 ? \"bg-blue-600\" : index === 1 ? \"bg-blue-500\" : index < 4 ? \"bg-slate-600\" : \"bg-slate-400\";
+
+                  return (
+                    <div key={result.key} className=\"space-y-6 pb-12 border-b border-slate-100 last:border-0\">
+                      <div className=\"flex flex-wrap items-center justify-between gap-4\">
+                        <div className=\"space-y-1\">
+                          <div className=\"flex items-center gap-2\">
+                            <h3 className=\"text-2xl font-bold text-slate-900\">{info.title}</h3>
+                            <Badge className={`${strengthColor} text-white border-none`}>{strengthLabel}</Badge>
+                          </div>
+                          <p className=\"text-slate-500\">{NEED_LABELS[result.key]}</p>
+                        </div>
+                        <div className=\"text-3xl font-bold text-slate-300\">{result.percentage}%</div>
+                      </div>
+
+                      <p className=\"text-lg text-slate-700 leading-relaxed\">{info.description}</p>
+
+                      <div className=\"grid grid-cols-1 md:grid-cols-2 gap-8\">
+                        <div className=\"space-y-4 bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100\">
+                          <h4 className=\"font-bold text-emerald-800 flex items-center gap-2\">
+                            <div className=\"h-1.5 w-1.5 rounded-full bg-emerald-500\" />
+                            What to Seek
+                          </h4>
+                          <ul className=\"space-y-2\">
+                            {info.seek.map((item, i) => (
+                              <li key={i} className=\"text-sm text-emerald-700 flex items-start gap-2 italic\">
+                                • {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className=\"space-y-4 bg-rose-50/50 p-6 rounded-2xl border border-rose-100\">
+                          <h4 className=\"font-bold text-rose-800 flex items-center gap-2\">
+                            <div className=\"h-1.5 w-1.5 rounded-full bg-rose-500\" />
+                            What to Avoid
+                          </h4>
+                          <ul className=\"space-y-2\">
+                            {info.avoid.map((item, i) => (
+                              <li key={i} className=\"text-sm text-rose-700 flex items-start gap-2 italic\">
+                                • {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className=\"bg-blue-50 border border-blue-100 p-6 rounded-2xl space-y-4\">
+                        <h4 className=\"font-bold text-blue-900\">Top 5 Action Steps for {info.title}:</h4>
+                        <div className=\"space-y-3\">
+                          {info.actionSteps.map((step, i) => (
+                            <div key={i} className=\"flex items-start gap-3\">
+                              <div className=\"h-5 w-5 rounded-full bg-blue-200 text-blue-700 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5\">{i+1}</div>
+                              <p className=\"text-sm text-blue-800\">{step}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className=\"p-6 bg-slate-50 rounded-2xl border border-slate-100\">
+                        <h4 className=\"font-bold text-slate-900 mb-4 italic\">Reflect on this:</h4>
+                        <ul className=\"space-y-4\">
+                          {info.reflection.map((q, i) => (
+                            <li key={i} className=\"text-slate-600 border-l-2 border-slate-200 pl-4\">{q}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className=\"mt-12 pt-12 border-t border-slate-100 text-center space-y-6\">
+                <div className=\"space-y-2\">
+                  <h3 className=\"text-xl font-bold text-slate-900\">Ready to transform your career?</h3>
+                  <p className=\"text-slate-500\">Use these insights to guide your next career move or improve your current role.</p>
+                </div>
+                <div className=\"flex flex-col sm:flex-row gap-4 justify-center\">
+                  <Button onClick={() => window.location.reload()} variant=\"outline\" className=\"gap-2\">
+                    <RotateCcw className=\"h-4 w-4\" /> Retake Assessment
+                  </Button>
+                  <Button className=\"bg-slate-900 hover:bg-slate-800 gap-2\">
+                    <Download className=\"h-4 w-4\" /> Download Results as PDF
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
+    );
+  }
+
+  const question = QUESTIONS[currentStep];
+
+  return (
+    <div className=\"min-h-screen bg-slate-50 flex items-center justify-center p-4\">
+      <Card className=\"max-w-2xl w-full shadow-xl border-none\">
+        <div className=\"h-2 bg-slate-100 w-full\">
+          <div 
+            className=\"h-full bg-blue-600 transition-all duration-500 ease-out\"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <CardContent className=\"p-8 md:p-12\">
+          <div className=\"flex justify-between items-center mb-10\">
+            <span className=\"text-sm font-bold text-slate-400 uppercase tracking-widest\">Question {currentStep + 1} of {totalQuestions}</span>
+            <Badge variant=\"secondary\" className=\"bg-slate-100 text-slate-600 border-none\">{NEED_LABELS[question.need]}</Badge>
+          </div>
+          
+          <h2 className=\"text-2xl md:text-3xl font-bold text-slate-900 mb-12 leading-tight\">
+            {question.text}
+          </h2>
+
+          <div className=\"grid grid-cols-1 gap-3\">
+            {[
+              { label: \"Strongly Agree\", value: 5, color: \"bg-blue-600 hover:bg-blue-700 text-white\" },
+              { label: \"Agree\", value: 4, color: \"bg-white hover:bg-slate-50 border-slate-200 text-slate-700\" },
+              { label: \"Neutral\", value: 3, color: \"bg-white hover:bg-slate-50 border-slate-200 text-slate-700\" },
+              { label: \"Disagree\", value: 2, color: \"bg-white hover:bg-slate-50 border-slate-200 text-slate-700\" },
+              { label: \"Strongly Disagree\", value: 1, color: \"bg-white hover:bg-slate-50 border-slate-200 text-slate-700\" },
+            ].map((option) => (
+              <Button
+                key={option.value}
+                onClick={() => handleAnswer(option.value)}
+                variant=\"outline\"
+                className={`h-16 text-lg font-medium justify-start px-8 rounded-xl transition-all duration-200 ${option.color}`}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
 
-function InterpretationBlock({ need, rankLabel }: { need: NeedKey; rankLabel: string }) {
-  const data = INTERPRETATIONS[need];
-  return (
-    <Card className="p-6 space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold">{data.title}</h3>
-        <Badge variant="secondary">{rankLabel}</Badge>
-      </div>
-      <p className="text-gray-700 leading-relaxed">{data.meaning}</p>
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <h4 className="font-bold text-sm uppercase tracking-wider text-gray-500 mb-2">Seek</h4>
-          <ul className="list-disc pl-5 space-y-1 text-sm">
-            {data.seek.map(i => <li key={i}>{i}</li>)}
-          </ul>
-        </div>
-        <div>
-          <h4 className="font-bold text-sm uppercase tracking-wider text-gray-500 mb-2">Avoid</h4>
-          <ul className="list-disc pl-5 space-y-1 text-sm">
-            {data.avoid.map(i => <li key={i}>{i}</li>)}
-          </ul>
-        </div>
-      </div>
-    </Card>
-  );
-}
+export default App;
