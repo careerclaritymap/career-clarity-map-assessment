@@ -218,10 +218,10 @@ export default function App() {
             to_name: name || "User",
             top1: NEED_LABELS[topNeeds.top1!],
             top2: NEED_LABELS[topNeeds.top2!],
+                      results_link: window.location.origin,
+                      pdf_data: imgData, // base64 PDF image
             
-            // In a real scenario, you'd upload the PDF somewhere or use a service that handles attachments.
-            // For now, we'll send the data URL as a placeholder or just the text results.
-          },
+         },
           import.meta.env.VITE_EMAILJS_PUC_KEY
         );
         setEmailSent(true);
