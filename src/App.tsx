@@ -218,8 +218,7 @@ export default function App() {
             to_name: name || "User",
             top1: NEED_LABELS[topNeeds.top1!],
             top2: NEED_LABELS[topNeeds.top2!],
-                      results_link: window.location.origin,
-                      pdf_data: imgData, // base64 PDF image
+          results_link: window.location.href,                      pdf_data: imgData, // base64 PDF image
             
          },
           import.meta.env.VITE_EMAILJS_PUC_KEY
